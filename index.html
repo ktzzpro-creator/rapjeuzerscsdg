@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ULTRA CHAIN | UNDERGROUND EDITION</title>
+    <style>
+        :root {
+            --neon-green: #00ff66;
+            --dark-bg: #0a0a0a;
+            --panel-bg: #151515;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: white;
+            font-family: 'Inter', -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .game-card {
+            background: var(--panel-bg);
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid #333;
+            text-align: center;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .label {
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        #current-artist {
+            font-size: 3rem;
+            font-weight: 900;
+            margin: 0 0 30px 0;
+            background: linear-gradient(to bottom, #fff, #888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+        }
+
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 100%;
+            background: #000;
+            border: 2px solid #222;
+            padding: 18px;
+            border-radius: 12px;
+            color: var(--neon-green);
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            outline: none;
+            transition: 0.3s;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            border-color: var(--neon-green);
+            box-shadow: 0 0 20px rgba(0, 255, 102, 0.2);
+        }
+
+        .timer-bar-container {
+            width: 100%;
+            height: 6px;
+            background: #222;
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        #timer-bar {
+            width: 100%;
+            height: 100%;
+            background: var(--neon-green);
+            transition: width 1s linear;
+        }
+
+        .score-box {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        #score-val { color: var(--neon-green); }
+
+        /* Animation d'erreur */
+        .shake { animation: shake 0.4s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-card" id="main-card">
+        <div class="label">Artiste Actuel</div>
+        <h2 id="current-artist">NETTSPEND</h2>
+
+        <div class="input-wrapper">
+            <input type="text" id="artist-input" placeholder="TAPE UN FEAT..." autocomplete="off">
+        </div>
+
+        <div class="score-box">CONNEXIONS : <span id="score-val">0</span></div>
+
+        <div class="timer-bar-container">
+            <div id="timer-bar"></div>
+        </div>
+    </div>
+
+    <script>
+        // BASE DE DONNÉES SIMPLIFIÉE (S'élargit automatiquement par les noms saisis)
+        // Pour un vrai jeu avec 2000 noms, on utilise une API ou un dictionnaire massif.
+        const connections = {
+            "nettspend": ["osamason", "lazer dim 700", "xaviersobased", "yhapojj", "krueger", "che", "tana"],
+            "osamason": ["nettspend", "lazer dim 700", "boolymon", "kankan", "lucki", "ken carson"],
+            "jeune morty": ["thaumaturge", "8ruki", "j9ueve", "la fève", "khali", "luther"],
+            "8ruki": ["jeune morty", "j9ueve", "thaumaturge", "bne", "serane", "asap ant"],
+            "la fève": ["zamdane", "so la lune", "jeune morty", "j9ueve", "khali"],
+            "ken carson": ["destroy lonely", "playboi carti", "osamason", "yeat"],
+            "luther": ["lucas preti", "amnezzia", "jeune morty"]
+        };
+
+        let currentArtist = "nettspend";
+        let score = 0;
+        let timeLeft = 100;
+        const gameCard = document.getElementById('main-card');
+        const input = document.getElementById('artist-input');
+        const artistDisplay = document.getElementById('current-artist');
+        const scoreDisplay = document.getElementById('score-val');
+        const timerBar = document.getElementById('timer-bar');
+
+        // Timer global
+        setInterval(() => {
+            if (timeLeft > 0) {
+                timeLeft -= 0.5;
+                timerBar.style.width = timeLeft + "%";
+            } else {
+                gameOver();
+            }
+        }, 500);
+
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const guess = input.value.toLowerCase().trim();
+                verifyAndMove(guess);
+            }
+        });
+
+        function verifyAndMove(guess) {
+            const possibleFeats = connections[currentArtist] || [];
+
+            if (possibleFeats.includes(guess)) {
+                // SUCCESS
+                currentArtist = guess;
+                score++;
+                scoreDisplay.innerText = score;
+                artistDisplay.innerText = guess.toUpperCase();
+                input.value = "";
+                timeLeft = Math.min(timeLeft + 15, 100); // Bonus de temps
+                
+                // Effet visuel flash vert
+                gameCard.style.borderColor = "var(--neon-green)";
+                setTimeout(() => gameCard.style.borderColor = "#333", 400);
+            } else {
+                // ERROR
+                gameCard.classList.add('shake');
+                input.value = "";
+                setTimeout(() => gameCard.classList.remove('shake'), 400);
+            }
+        }
+
+        function gameOver() {
+            alert("GAME OVER ! Ton score : " + score);
+            location.reload();
+        }
+    </script>
+</body>
+</html>
